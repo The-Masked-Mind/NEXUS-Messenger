@@ -1,0 +1,274 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #0d0d0f;
+  color: #f3f3f3;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  height: 74px;
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-bottom: 1px solid #29292d;
+  background: #151518;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  text-align: center;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+.brand span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #8f8f99;
+  letter-spacing: 1px;
+}
+
+.icon-btn,
+.profile-btn,
+.close-btn {
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #232328;
+  font-size: 21px;
+}
+
+.profile-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  color: #111;
+  font-weight: 700;
+  font-size: 18px;
+  justify-self: end;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #151518;
+  border-bottom: 1px solid #29292d;
+  position: sticky;
+  top: 74px;
+  z-index: 9;
+}
+
+.tab {
+  padding: 15px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #8f8f99;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tab.active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+.content {
+  width: min(900px, 100%);
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.tab-page {
+  display: none;
+}
+
+.tab-page.active {
+  display: block;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.primary-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 15px;
+  background: #f3f3f3;
+  color: #101012;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.empty-state {
+  min-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #96969f;
+}
+
+.empty-state h2 {
+  margin: 8px 0 6px;
+  color: #eee;
+  font-size: 20px;
+}
+
+.empty-state p {
+  max-width: 340px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.empty-icon {
+  font-size: 44px;
+  margin-bottom: 8px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0,0,0,.72);
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+.modal {
+  width: min(440px, 100%);
+  border: 1px solid #323238;
+  border-radius: 18px;
+  background: #18181c;
+  box-shadow: 0 24px 70px rgba(0,0,0,.5);
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 18px;
+  border-bottom: 1px solid #2d2d32;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #242429;
+  font-size: 24px;
+}
+
+#modalContent {
+  padding: 18px;
+}
+
+.settings-card,
+.profile-card {
+  display: grid;
+  gap: 12px;
+}
+
+.danger-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #6e3030;
+  border-radius: 12px;
+  background: #2a1718;
+  color: #ff9c9c;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.info-row {
+  padding: 13px 14px;
+  background: #222227;
+  border-radius: 12px;
+}
+
+.info-row small {
+  display: block;
+  color: #888891;
+  margin-bottom: 5px;
+}
+
+.share-btn {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #f3f3f3;
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .brand h1 {
+    font-size: 19px;
+    letter-spacing: 3px;
+  }
+
+  .content {
+    padding-top: 18px;
+  }
+
+  .section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
