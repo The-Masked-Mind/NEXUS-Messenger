@@ -3,6 +3,6 @@
   "short_name": "NEXUS",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0d0d0f",
-  "theme_color": "#111111"
+  "background_color": "#07111F",
+  "theme_color": "#0D1A2B"
 }
