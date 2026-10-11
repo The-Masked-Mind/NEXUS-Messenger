@@ -1,3 +1,37 @@
+
+
+// --- PWA / App-Installation ---
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => console.error("Service Worker Fehler:", error));
+  });
+}
+
+function getInstallButtonHtml() {
+  return `
+    <button class="install-btn" id="installAppBtn">
+      NEXUS als App installieren
+    </button>
+    <p class="install-hint">
+      Auf Android/Chrome erscheint dadurch die normale App-Installation.
+      Falls der Button nicht angeboten wird, kannst du im Browser-Menü
+      „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.
+    </p>
+  `;
+}
+
 const tabs = document.querySelectorAll(".tab");
 const pages = document.querySelectorAll(".tab-page");
 
@@ -33,14 +67,26 @@ function closeModal() {
 settingsBtn.addEventListener("click", () => {
   openModal("Einstellungen", `
     <div class="settings-card">
+      ${getInstallButtonHtml()}
       <button class="danger-btn" id="deleteAccountBtn">
         Konto löschen
       </button>
     </div>
   `);
 
+  const installBtn = document.getElementById("installAppBtn");
+  installBtn.addEventListener("click", async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+    } else {
+      alert("Wenn NEXUS über HTTPS geöffnet ist, kannst du im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen.");
+    }
+  });
+
   document.getElementById("deleteAccountBtn").addEventListener("click", () => {
-    alert("Das echte Löschen bauen wir später mit Supabase und einer Sicherheitsabfrage ein.");
+    alert("Das echte Löschen bauen wir später mit Firebase und einer Sicherheitsabfrage ein.");
   });
 });
 

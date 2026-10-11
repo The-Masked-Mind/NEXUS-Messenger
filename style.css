@@ -311,3 +311,26 @@ button {
 .modal { border-color: #21446E; }
 .info-row { border: 1px solid #18385E; }
 .danger-btn { background: #2A1718; border-color: #6E3030; color: #FF9C9C; }
+
+
+.install-btn {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2F6BFF, #4D8DFF);
+  color: #FFFFFF;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.install-btn:hover {
+  filter: brightness(1.08);
+}
+
+.install-hint {
+  margin: -2px 4px 6px;
+  color: #8EA6C7;
+  font-size: 12px;
+  line-height: 1.45;
+}
