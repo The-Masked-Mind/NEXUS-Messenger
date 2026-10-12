@@ -335,86 +335,39 @@ button {
   line-height: 1.45;
 }
 
-/* NEXUS Herzschlag-/Druckwellen-Effekt */
-.pulse-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 14px;
-  overflow: visible;
-}
-
+/* --- NEXUS sanfter Leuchteffekt --- */
 .brand h1 {
-  position: relative;
-  z-index: 2;
   margin: 0;
+  font-size: 22px;
+  letter-spacing: 4px;
   color: #4D8DFF;
   text-shadow:
-    0 0 8px rgba(77, 141, 255, 0.45),
-    0 0 18px rgba(47, 107, 255, 0.20);
-  animation: nexusHeartbeat 2.8s infinite ease-in-out;
+    0 0 6px rgba(77, 141, 255, 0.30),
+    0 0 14px rgba(47, 107, 255, 0.18);
+  animation: nexusGlow 2.8s ease-in-out infinite;
 }
 
-.pulse-ring {
-  position: absolute;
-  inset: 0;
-  border: 1.5px solid rgba(77, 141, 255, 0.55);
-  border-radius: 999px;
-  opacity: 0;
-  transform: scale(0.9);
-  box-shadow:
-    0 0 10px rgba(77, 141, 255, 0.28),
-    0 0 24px rgba(47, 107, 255, 0.12);
-  pointer-events: none;
-}
-
-.pulse-ring-1 {
-  animation: nexusShockwave 2.8s infinite cubic-bezier(.2,.7,.2,1);
-}
-
-.pulse-ring-2 {
-  animation: nexusShockwave 2.8s infinite cubic-bezier(.2,.7,.2,1);
-  animation-delay: 0.22s;
-}
-
-@keyframes nexusShockwave {
-  0%, 10% {
-    opacity: 0;
-    transform: scale(0.90);
-  }
-  13% {
-    opacity: 0.72;
-    transform: scale(0.98);
-  }
-  36% {
-    opacity: 0;
-    transform: scale(1.72);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.72);
-  }
-}
-
-@keyframes nexusHeartbeat {
-  0%, 10%, 18%, 100% {
+@keyframes nexusGlow {
+  0%, 100% {
+    color: #4D8DFF;
+    text-shadow:
+      0 0 6px rgba(77, 141, 255, 0.30),
+      0 0 14px rgba(47, 107, 255, 0.18);
     filter: brightness(1);
   }
-  12% {
+
+  50% {
+    color: #78A9FF;
+    text-shadow:
+      0 0 10px rgba(120, 169, 255, 0.62),
+      0 0 22px rgba(77, 141, 255, 0.42),
+      0 0 36px rgba(47, 107, 255, 0.24);
     filter: brightness(1.18);
-  }
-  15% {
-    filter: brightness(1.05);
-  }
-  17% {
-    filter: brightness(1.28);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .brand h1,
-  .pulse-ring {
+  .brand h1 {
     animation: none !important;
   }
 }
