@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const CACHE_NAME = "nexus-v5";
+=======
+const CACHE_NAME = "nexus-v3";
+>>>>>>> 25950124f9ba9a20e7f087d9803f2731e1f45ba0
 const APP_FILES = [
   "./",
   "./index.html",
