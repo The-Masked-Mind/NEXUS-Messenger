@@ -914,3 +914,46 @@ button {
   color: #A7CBFF;
   opacity: 1;
 }
+
+
+/* --- Push-Benachrichtigungen --- */
+.setting-box {
+  padding: 13px 14px;
+  border: 1px solid #18385E;
+  border-radius: 13px;
+  background: #10203A;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.setting-row strong,
+.setting-row small {
+  display: block;
+}
+
+.setting-row small {
+  margin-top: 4px;
+  color: #8EA6C7;
+  line-height: 1.35;
+}
+
+.notification-btn {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2F6BFF, #4D8DFF);
+  color: #FFFFFF;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.notification-btn:disabled {
+  opacity: .65;
+  cursor: wait;
+}

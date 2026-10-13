@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-messaging.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -25,6 +26,117 @@ import {
   orderBy,
   arrayUnion
 } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+
+
+// =========================
+// NEXUS Push-Benachrichtigungen
+// =========================
+
+async function sha256Short(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 40);
+}
+
+async function savePushToken(token) {
+  const uid = auth.currentUser?.uid;
+  if (!uid || !token) return;
+
+  const deviceId = await sha256Short(token);
+
+  await setDoc(
+    doc(db, "users", uid, "devices", deviceId),
+    {
+      token,
+      platform: navigator.userAgent || "unknown",
+      updatedAt: serverTimestamp(),
+      notificationsEnabled: true
+    },
+    { merge: true }
+  );
+}
+
+async function enableNotifications() {
+  if (!("Notification" in window)) {
+    throw new Error("Dieser Browser unterstützt keine Benachrichtigungen.");
+  }
+
+  if (!("serviceWorker" in navigator)) {
+    throw new Error("Service Worker werden in diesem Browser nicht unterstützt.");
+  }
+
+  const permission = await Notification.requestPermission();
+
+  if (permission !== "granted") {
+    throw new Error("Benachrichtigungen wurden nicht erlaubt.");
+  }
+
+  // FCM verwendet einen eigenen Messaging-Service-Worker.
+  const messagingRegistration = await navigator.serviceWorker.register(
+    "./firebase-messaging-sw.js",
+    { scope: "./firebase-cloud-messaging-push-scope" }
+  );
+
+  const token = await getToken(messaging, {
+    vapidKey: NEXUS_VAPID_KEY,
+    serviceWorkerRegistration: messagingRegistration
+  });
+
+  if (!token) {
+    throw new Error("Es konnte kein Push-Token erzeugt werden.");
+  }
+
+  await savePushToken(token);
+  localStorage.setItem("nexusNotificationsEnabled", "1");
+
+  return token;
+}
+
+function notificationStatusText() {
+  if (!("Notification" in window)) return "Nicht unterstützt";
+
+  if (Notification.permission === "granted") {
+    return localStorage.getItem("nexusNotificationsEnabled") === "1"
+      ? "Aktiv"
+      : "Erlaubt – noch nicht registriert";
+  }
+
+  if (Notification.permission === "denied") return "Im Browser blockiert";
+  return "Noch nicht aktiviert";
+}
+
+// Nachrichten, die eintreffen während NEXUS sichtbar ist.
+onMessage(messaging, (payload) => {
+  const title =
+    payload?.notification?.title ||
+    payload?.data?.title ||
+    "Neue NEXUS-Nachricht";
+
+  const body =
+    payload?.notification?.body ||
+    payload?.data?.body ||
+    "Du hast eine neue Nachricht erhalten.";
+
+  // Wenn die App gerade offen ist, zeigen wir trotzdem eine Systemmeldung,
+  // sofern der Nutzer Benachrichtigungen erlaubt hat.
+  if (Notification.permission === "granted") {
+    const notification = new Notification(title, {
+      body,
+      icon: "./icon-192.png",
+      badge: "./icon-192.png",
+      tag: payload?.data?.chatId || "nexus-message"
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+  }
+});
 
 
 // =========================
@@ -75,6 +187,8 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const messaging = getMessaging(firebaseApp);
+const NEXUS_VAPID_KEY = "BISB4Wx7FBaqk4qj2AZS1gfdSBnHsB24IIpVmfIA8tBU5OrLAcT5ugOzUV9tK1fSLbhOgJTWUnUzVajlIMRotRY";
 
 const authScreen = document.getElementById("authScreen");
 const registerStep = document.getElementById("registerStep");
@@ -1357,6 +1471,19 @@ settingsBtn.addEventListener("click", () => {
   openModal("Einstellungen", `
     <div class="settings-card">
       ${getInstallButtonHtml()}
+
+      <div class="setting-box">
+        <div class="setting-row">
+          <div>
+            <strong>Benachrichtigungen</strong>
+            <small id="notificationStatus">${notificationStatusText()}</small>
+          </div>
+          <button class="notification-btn" id="enableNotificationsBtn">
+            Aktivieren
+          </button>
+        </div>
+      </div>
+
       <button class="danger-btn" id="deleteAccountBtn">
         Konto löschen
       </button>
@@ -1371,6 +1498,32 @@ settingsBtn.addEventListener("click", () => {
       deferredInstallPrompt = null;
     } else {
       alert("Wenn NEXUS über HTTPS geöffnet ist, kannst du im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen.");
+    }
+  });
+
+
+  const notificationsBtn = document.getElementById("enableNotificationsBtn");
+  notificationsBtn?.addEventListener("click", async () => {
+    const status = document.getElementById("notificationStatus");
+
+    notificationsBtn.disabled = true;
+    notificationsBtn.textContent = "Wird aktiviert…";
+
+    try {
+      await enableNotifications();
+
+      if (status) status.textContent = "Aktiv";
+      notificationsBtn.textContent = "Aktiviert";
+    } catch (error) {
+      console.error("Push-Aktivierung fehlgeschlagen:", error);
+
+      if (status) {
+        status.textContent = error?.message || "Aktivierung fehlgeschlagen";
+      }
+
+      notificationsBtn.textContent = "Erneut versuchen";
+    } finally {
+      notificationsBtn.disabled = false;
     }
   });
 
