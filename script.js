@@ -22,7 +22,8 @@ import {
   serverTimestamp,
   addDoc,
   onSnapshot,
-  orderBy
+  orderBy,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
 
 
@@ -1002,6 +1003,7 @@ async function openDirectChat(user) {
     `);
 
     startMessagesListener(chatId);
+    await markChatAsRead(chatId);
 
     const form = document.getElementById("messageForm");
     const input = document.getElementById("messageInput");
@@ -1099,18 +1101,29 @@ function startMessagesListener(chatId) {
       const mine = m.senderUid === myUid;
       const text = m.deleted ? "Nachricht gelöscht" : escapeHtml(m.text || "");
       const time = formatChatTime(m.createdAt);
+      const readBy = Array.isArray(m.readBy) ? m.readBy : [];
+      const otherHasRead = currentChatPartner?.uid
+        ? readBy.includes(currentChatPartner.uid)
+        : false;
+      const readState = mine
+        ? `<span class="read-state ${otherHasRead ? "read" : ""}">${otherHasRead ? "✓✓" : "✓"}</span>`
+        : "";
 
       return `
         <div class="message-row ${mine ? "mine" : "theirs"}">
           <div class="message-bubble">
             <div class="message-text">${text}</div>
-            <div class="message-time">${escapeHtml(time)}</div>
+            <div class="message-time">${escapeHtml(time)} ${readState}</div>
           </div>
         </div>
       `;
     }).join("");
 
     list.scrollTop = list.scrollHeight;
+
+    // Neue eingehende Nachrichten werden sofort als gelesen markiert,
+    // solange der Chat geöffnet ist.
+    markChatAsRead(chatId);
   }, (error) => {
     console.error("Nachrichten konnten nicht geladen werden:", error);
     const list = document.getElementById("messagesList");
@@ -1118,6 +1131,71 @@ function startMessagesListener(chatId) {
       list.innerHTML = `<div class="chat-loading">Nachrichten konnten nicht geladen werden.</div>`;
     }
   });
+}
+
+
+async function getUnreadCount(chatId) {
+  const myUid = auth.currentUser?.uid;
+  if (!myUid) return 0;
+
+  try {
+    const snap = await getDocs(
+      collection(db, "chats", chatId, "messages")
+    );
+
+    let count = 0;
+
+    snap.forEach((messageDoc) => {
+      const m = messageDoc.data();
+      const readBy = Array.isArray(m.readBy) ? m.readBy : [];
+
+      if (
+        m.senderUid !== myUid &&
+        m.deleted !== true &&
+        !readBy.includes(myUid)
+      ) {
+        count++;
+      }
+    });
+
+    return count;
+  } catch (error) {
+    console.error("Ungelesen-Zähler fehlgeschlagen:", error);
+    return 0;
+  }
+}
+
+async function markChatAsRead(chatId) {
+  const myUid = auth.currentUser?.uid;
+  if (!myUid) return;
+
+  try {
+    const snap = await getDocs(
+      collection(db, "chats", chatId, "messages")
+    );
+
+    const updates = [];
+
+    snap.forEach((messageDoc) => {
+      const m = messageDoc.data();
+      const readBy = Array.isArray(m.readBy) ? m.readBy : [];
+
+      if (m.senderUid !== myUid && !readBy.includes(myUid)) {
+        updates.push(
+          updateDoc(
+            doc(db, "chats", chatId, "messages", messageDoc.id),
+            { readBy: arrayUnion(myUid) }
+          )
+        );
+      }
+    });
+
+    if (updates.length) {
+      await Promise.all(updates);
+    }
+  } catch (error) {
+    console.error("Nachrichten konnten nicht als gelesen markiert werden:", error);
+  }
 }
 
 async function renderChats(chatDocs) {
@@ -1138,9 +1216,12 @@ async function renderChats(chatDocs) {
       const otherUser = await getUserByUid(otherUid);
       if (!otherUser || otherUser.active === false) continue;
 
+      const unreadCount = await getUnreadCount(chatDoc.id);
+
       rows.push({
         ...chatDoc,
-        otherUser
+        otherUser,
+        unreadCount
       });
     } catch (error) {
       console.error("Chatpartner konnte nicht geladen werden:", error);
@@ -1170,12 +1251,15 @@ async function renderChats(chatDocs) {
     const time = formatChatListTime(row.lastMessageAt || row.updatedAt);
 
     return `
-      <button class="chat-row" data-chat-index="${index}">
+      <button class="chat-row ${row.unreadCount > 0 ? "has-unread" : ""}" data-chat-index="${index}">
         <span class="contact-avatar">${escapeHtml(username.charAt(0).toUpperCase())}</span>
         <span class="chat-row-main">
           <span class="chat-row-top">
             <strong>${escapeHtml(username)}</strong>
-            <small>${escapeHtml(time)}</small>
+            <span class="chat-meta">
+              <small>${escapeHtml(time)}</small>
+              ${row.unreadCount > 0 ? `<span class="unread-badge">${row.unreadCount > 99 ? "99+" : row.unreadCount}</span>` : ""}
+            </span>
           </span>
           <span class="chat-preview">${escapeHtml(lastMessage)}</span>
         </span>
@@ -1316,7 +1400,7 @@ profileBtn.addEventListener("click", () => {
 
   document.getElementById("shareProfileBtn").addEventListener("click", async () => {
     const publicId = localStorage.getItem("nexusPublicId") || "";
-    const url = `${window.location.origin}${window.location.pathname}?user=${encodeURIComponent(publicId)}`;
+    const url = `${window.location.origin}/?user=${encodeURIComponent(publicId)}`;
 
     if (navigator.share) {
       try {

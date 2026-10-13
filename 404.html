@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0D1A2B" />
+  <meta name="application-name" content="NEXUS" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NEXUS" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>NEXUS</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">NEXUS</div>
+      <div class="auth-subtitle">Private Messenger</div>
+
+      <div class="auth-switch">
+        <button class="auth-switch-btn active" id="showRegisterBtn">Registrieren</button>
+        <button class="auth-switch-btn" id="showLoginBtn">Anmelden</button>
+      </div>
+
+      <div class="auth-step" id="registerStep">
+        <h2>Einladung einlösen</h2>
+        <p>Du brauchst nur deine Einladung, einen Benutzernamen und deinen persönlichen 6-stelligen Code.</p>
+
+        <label for="inviteCodeInput">Einladungscode</label>
+        <input id="inviteCodeInput" class="auth-input" type="text" autocomplete="off" placeholder="z. B. NEXUS-TEST-001">
+
+        <label for="usernameInput">Benutzername</label>
+        <input id="usernameInput" class="auth-input" type="text" autocomplete="username" maxlength="24" placeholder="Dein Benutzername">
+
+        <label for="pinInput">Persönlicher App-Code</label>
+        <input id="pinInput" class="auth-input pin-input" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="6-stelliger Code">
+
+        <label for="pinConfirmInput">Code wiederholen</label>
+        <input id="pinConfirmInput" class="auth-input pin-input" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Code wiederholen">
+
+        <button class="auth-primary" id="registerBtn">Konto erstellen</button>
+        <div class="auth-message" id="authMessage"></div>
+      </div>
+
+      <div class="auth-step hidden" id="loginStep">
+        <h2>Bei NEXUS anmelden</h2>
+        <p>Melde dich auf jedem Gerät mit deinem NEXUS-Benutzernamen und deinem persönlichen Code an.</p>
+
+        <label for="loginUsernameInput">Benutzername</label>
+        <input id="loginUsernameInput" class="auth-input" type="text" autocomplete="username" maxlength="24" placeholder="Dein Benutzername">
+
+        <label for="loginPinInput">Persönlicher App-Code</label>
+        <input id="loginPinInput" class="auth-input pin-input" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="6-stelliger Code">
+
+        <button class="auth-primary" id="loginBtn">Anmelden</button>
+        <button class="auth-link" id="forgotLoginPinBtn">Code vergessen</button>
+        <div class="auth-message" id="loginMessage"></div>
+      </div>
+
+      <div class="auth-step hidden" id="unlockStep">
+        <h2>NEXUS entsperren</h2>
+        <p id="unlockHello">Gib deinen persönlichen App-Code ein.</p>
+
+        <input id="unlockPinInput" class="auth-input pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="App-Code">
+        <button class="auth-primary" id="unlockBtn">Entsperren</button>
+        <button class="auth-link" id="useOtherAccountBtn">Anderes Konto verwenden</button>
+        <button class="auth-link" id="forgotPinBtn">Code vergessen</button>
+        <div class="auth-message" id="unlockMessage"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell">
+
+    <header class="topbar">
+      <button class="icon-btn" id="settingsBtn" aria-label="Einstellungen">⚙</button>
+
+      <div class="brand">
+        <h1>NEXUS</h1>
+        <span>Private Messenger</span>
+        <small id="firebaseStatus" class="firebase-status">Firebase wird verbunden…</small>
+      </div>
+
+      <button class="profile-btn" id="profileBtn" aria-label="Profil">
+        <span id="profileInitial">N</span>
+      </button>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="chats">Chats</button>
+      <button class="tab" data-tab="contacts">Kontakte</button>
+      <button class="tab" data-tab="groups">Gruppen</button>
+    </nav>
+
+    <main class="content">
+      <section class="tab-page active" id="chats">
+        <div class="section-header">
+          <div>
+            <h2>Chats</h2>
+            <p class="section-note">Deine laufenden Unterhaltungen.</p>
+          </div>
+        </div>
+
+        <div class="chats-list" id="chatsList">
+          <div class="empty-state compact-empty">
+            <div class="empty-icon">💬</div>
+            <h2>Noch keine Chats</h2>
+            <p>Öffne einen Kontakt und schreibe die erste Nachricht.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-page" id="contacts">
+        <div class="section-header">
+          <div>
+            <h2>Kontakte</h2>
+            <p class="section-note">Deine gespeicherten NEXUS-Kontakte.</p>
+          </div>
+          <button class="primary-btn" id="addContactBtn">+ Kontakt</button>
+        </div>
+
+        <div class="contacts-list" id="contactsList">
+          <div class="empty-state compact-empty" id="contactsEmpty">
+            <div class="empty-icon">👥</div>
+            <h2>Noch keine Kontakte</h2>
+            <p>Öffne einen NEXUS-Link oder füge einen Kontakt über seine NEXUS-ID hinzu.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-page" id="groups">
+        <div class="section-header">
+          <h2>Gruppen</h2>
+          <button class="primary-btn" id="newGroupBtn">+ Gruppe erstellen</button>
+        </div>
+
+        <div class="empty-state">
+          <div class="empty-icon">🗨️</div>
+          <h2>Noch keine Gruppen</h2>
+          <p>Erstelle später eine Gruppe und füge deine Kontakte hinzu.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="modalTitle">Fenster</h2>
+        <button class="close-btn" id="closeModal">×</button>
+      </div>
+
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

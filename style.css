@@ -868,3 +868,49 @@ button {
     max-width: 84%;
   }
 }
+
+
+/* --- Ungelesen / Gelesen --- */
+.chat-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.unread-badge {
+  min-width: 21px;
+  height: 21px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #2F6BFF;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(47,107,255,.24);
+}
+
+.chat-row.has-unread .chat-preview {
+  color: #DCE8FF;
+  font-weight: 700;
+}
+
+.chat-row.has-unread .contact-avatar {
+  box-shadow:
+    0 0 0 2px rgba(77,141,255,.28),
+    0 0 18px rgba(47,107,255,.22);
+}
+
+.read-state {
+  margin-left: 3px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  opacity: .65;
+}
+
+.read-state.read {
+  color: #A7CBFF;
+  opacity: 1;
+}
