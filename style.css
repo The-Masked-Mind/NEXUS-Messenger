@@ -371,7 +371,6 @@ button {
     animation: none !important;
   }
 }
-<<<<<<< HEAD
 
 .firebase-status {
   display: block;
@@ -513,5 +512,3 @@ button {
 .auth-message.success {
   color: #7ED8A6;
 }
-=======
->>>>>>> 25950124f9ba9a20e7f087d9803f2731e1f45ba0

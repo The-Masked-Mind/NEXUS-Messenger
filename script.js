@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
 import {
   getAuth,
@@ -328,41 +327,6 @@ if (!auth.currentUser) {
   });
 }
 
-=======
-
-
-// --- PWA / App-Installation ---
-let deferredInstallPrompt = null;
-
-window.addEventListener("beforeinstallprompt", event => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-});
-
-window.addEventListener("appinstalled", () => {
-  deferredInstallPrompt = null;
-});
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .catch(error => console.error("Service Worker Fehler:", error));
-  });
-}
-
-function getInstallButtonHtml() {
-  return `
-    <button class="install-btn" id="installAppBtn">
-      NEXUS als App installieren
-    </button>
-    <p class="install-hint">
-      Auf Android/Chrome erscheint dadurch die normale App-Installation.
-      Falls der Button nicht angeboten wird, kannst du im Browser-Menü
-      „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.
-    </p>
-  `;
-}
->>>>>>> 25950124f9ba9a20e7f087d9803f2731e1f45ba0
 
 const tabs = document.querySelectorAll(".tab");
 const pages = document.querySelectorAll(".tab-page");
