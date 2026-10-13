@@ -14,6 +14,44 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">NEXUS</div>
+      <div class="auth-subtitle">Private Messenger</div>
+
+      <div class="auth-step" id="registerStep">
+        <h2>Einladung einlösen</h2>
+        <p>Gib deinen Einladungscode ein und richte dein NEXUS-Konto ein.</p>
+
+        <label for="inviteCodeInput">Einladungscode</label>
+        <input id="inviteCodeInput" class="auth-input" type="text" autocomplete="off" placeholder="z. B. NEXUS-TEST-001">
+
+        <label for="usernameInput">Benutzername</label>
+        <input id="usernameInput" class="auth-input" type="text" autocomplete="off" maxlength="24" placeholder="Dein Benutzername">
+
+        <label for="pinInput">Persönlicher App-Code</label>
+        <input id="pinInput" class="auth-input pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="6-stelliger Code">
+
+        <label for="pinConfirmInput">Code wiederholen</label>
+        <input id="pinConfirmInput" class="auth-input pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="Code wiederholen">
+
+        <button class="auth-primary" id="registerBtn">Konto erstellen</button>
+        <div class="auth-message" id="authMessage"></div>
+      </div>
+
+      <div class="auth-step hidden" id="unlockStep">
+        <h2>NEXUS entsperren</h2>
+        <p id="unlockHello">Gib deinen persönlichen App-Code ein.</p>
+
+        <input id="unlockPinInput" class="auth-input pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="App-Code">
+        <button class="auth-primary" id="unlockBtn">Entsperren</button>
+        <button class="auth-link" id="forgotPinBtn">Code vergessen</button>
+        <div class="auth-message" id="unlockMessage"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="app-shell">
 
     <header class="topbar">

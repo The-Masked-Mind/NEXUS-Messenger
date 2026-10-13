@@ -382,3 +382,133 @@ button {
 }
 .firebase-status[data-state="ok"] { color: #6FA8FF; }
 .firebase-status[data-state="error"] { color: #FF9C9C; }
+
+
+/* --- NEXUS Registrierung / App-Sperre --- */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(47, 107, 255, .20), transparent 34%),
+    #07111F;
+}
+
+.auth-screen.hidden,
+.auth-step.hidden {
+  display: none;
+}
+
+.auth-card {
+  width: min(430px, 100%);
+  padding: 28px;
+  border: 1px solid #21446E;
+  border-radius: 22px;
+  background: rgba(13, 26, 43, .96);
+  box-shadow: 0 30px 90px rgba(0,0,0,.48);
+}
+
+.auth-logo {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: #4D8DFF;
+  text-shadow:
+    0 0 10px rgba(120,169,255,.55),
+    0 0 30px rgba(47,107,255,.24);
+}
+
+.auth-subtitle {
+  margin-top: 4px;
+  margin-bottom: 28px;
+  text-align: center;
+  color: #8EA6C7;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.auth-step h2 {
+  margin: 0 0 8px;
+}
+
+.auth-step p {
+  margin: 0 0 22px;
+  color: #8EA6C7;
+  line-height: 1.45;
+}
+
+.auth-step label {
+  display: block;
+  margin: 14px 0 7px;
+  color: #B9CAE3;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #21446E;
+  border-radius: 12px;
+  outline: none;
+  background: #091727;
+  color: #FFFFFF;
+  font: inherit;
+}
+
+.auth-input:focus {
+  border-color: #4D8DFF;
+  box-shadow: 0 0 0 3px rgba(77,141,255,.12);
+}
+
+.pin-input {
+  letter-spacing: 5px;
+  font-size: 18px;
+}
+
+.auth-primary {
+  width: 100%;
+  margin-top: 22px;
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2F6BFF, #4D8DFF);
+  color: #FFFFFF;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.auth-primary:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.auth-link {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: #7EAEFF;
+  cursor: pointer;
+}
+
+.auth-message {
+  min-height: 20px;
+  margin-top: 13px;
+  text-align: center;
+  color: #9FB4D0;
+  font-size: 13px;
+}
+
+.auth-message.error {
+  color: #FF9C9C;
+}
+
+.auth-message.success {
+  color: #7ED8A6;
+}
