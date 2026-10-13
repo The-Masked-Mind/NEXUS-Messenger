@@ -25,6 +25,42 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
 
+
+// =========================
+// NEXUS PWA / Installation
+// =========================
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .catch((error) => console.error("Service Worker Fehler:", error));
+  });
+}
+
+function getInstallButtonHtml() {
+  return `
+    <button class="install-btn" id="installAppBtn">
+      NEXUS als App installieren
+    </button>
+    <p class="install-hint">
+      Falls der Installationsdialog nicht automatisch angeboten wird,
+      kannst du im Browser-Menü „App installieren“ bzw.
+      „Zum Startbildschirm hinzufügen“ wählen.
+    </p>
+  `;
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyC1zecGgLUSOnylen7-KBB6tcIxeasRKIY",
   authDomain: "nexus-messenger-1c6b7.firebaseapp.com",
@@ -865,6 +901,334 @@ async function afterNexusLoginContacts() {
 window.addEventListener("nexus-login-ready", afterNexusLoginContacts);
 
 
+
+
+// =========================
+// NEXUS 1:1 Chats
+// =========================
+
+const chatsList = document.getElementById("chatsList");
+let chatsUnsubscribe = null;
+let activeMessagesUnsubscribe = null;
+let currentChatPartner = null;
+let currentChatId = null;
+
+function directChatId(uidA, uidB) {
+  return [uidA, uidB].sort().join("__");
+}
+
+async function ensureDirectChat(otherUser) {
+  const myUid = auth.currentUser?.uid;
+  if (!myUid || !otherUser?.uid) throw new Error("Chat-Teilnehmer fehlen.");
+
+  const chatId = directChatId(myUid, otherUser.uid);
+  const chatRef = doc(db, "chats", chatId);
+  const snap = await getDoc(chatRef);
+
+  if (!snap.exists()) {
+    await setDoc(chatRef, {
+      type: "direct",
+      memberUids: [myUid, otherUser.uid],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastMessage: "",
+      lastMessageAt: serverTimestamp()
+    });
+  }
+
+  return chatId;
+}
+
+function formatChatTime(value) {
+  if (!value) return "";
+  try {
+    const d = value.toDate ? value.toDate() : new Date(value);
+    return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
+function formatChatListTime(value) {
+  if (!value) return "";
+  try {
+    const d = value.toDate ? value.toDate() : new Date(value);
+    const today = new Date();
+    const sameDay =
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate();
+
+    if (sameDay) {
+      return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
+async function openDirectChat(user) {
+  try {
+    const chatId = await ensureDirectChat(user);
+    currentChatId = chatId;
+    currentChatPartner = user;
+
+    openModal(user.username || "Chat", `
+      <div class="chat-window">
+        <div class="chat-partner">
+          <span class="contact-avatar">${escapeHtml((user.username || "N").charAt(0).toUpperCase())}</span>
+          <div>
+            <strong>${escapeHtml(user.username || "NEXUS-Nutzer")}</strong>
+            <small>${escapeHtml(user.publicId || "")}</small>
+          </div>
+        </div>
+
+        <div class="messages-list" id="messagesList">
+          <div class="chat-loading">Nachrichten werden geladen…</div>
+        </div>
+
+        <form class="message-composer" id="messageForm">
+          <textarea
+            id="messageInput"
+            rows="1"
+            maxlength="4000"
+            placeholder="Nachricht schreiben…"
+          ></textarea>
+          <button type="submit" class="send-btn" aria-label="Nachricht senden">➤</button>
+        </form>
+      </div>
+    `);
+
+    startMessagesListener(chatId);
+
+    const form = document.getElementById("messageForm");
+    const input = document.getElementById("messageInput");
+
+    input?.focus();
+
+    input?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        form?.requestSubmit();
+      }
+    });
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.disabled = true;
+
+      try {
+        await sendMessage(chatId, text);
+        input.value = "";
+        input.style.height = "auto";
+      } catch (error) {
+        console.error("Nachricht konnte nicht gesendet werden:", error);
+        alert("Die Nachricht konnte nicht gesendet werden.");
+      } finally {
+        input.disabled = false;
+        input.focus();
+      }
+    });
+
+    input?.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+    });
+  } catch (error) {
+    console.error("Chat konnte nicht geöffnet werden:", error);
+    alert("Der Chat konnte nicht geöffnet werden.");
+  }
+}
+
+async function sendMessage(chatId, text) {
+  const myUid = auth.currentUser?.uid;
+  if (!myUid) throw new Error("Nicht angemeldet.");
+
+  const messageRef = collection(db, "chats", chatId, "messages");
+
+  await addDoc(messageRef, {
+    senderUid: myUid,
+    text,
+    createdAt: serverTimestamp(),
+    readBy: [myUid],
+    deleted: false
+  });
+
+  await updateDoc(doc(db, "chats", chatId), {
+    updatedAt: serverTimestamp(),
+    lastMessage: text,
+    lastMessageAt: serverTimestamp()
+  });
+}
+
+function startMessagesListener(chatId) {
+  if (activeMessagesUnsubscribe) {
+    activeMessagesUnsubscribe();
+    activeMessagesUnsubscribe = null;
+  }
+
+  const messagesQuery = query(
+    collection(db, "chats", chatId, "messages"),
+    orderBy("createdAt", "asc")
+  );
+
+  activeMessagesUnsubscribe = onSnapshot(messagesQuery, (snap) => {
+    const list = document.getElementById("messagesList");
+    if (!list) return;
+
+    if (snap.empty) {
+      list.innerHTML = `
+        <div class="chat-empty">
+          <div>👋</div>
+          <p>Schreib die erste Nachricht.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const myUid = auth.currentUser?.uid;
+
+    list.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      const mine = m.senderUid === myUid;
+      const text = m.deleted ? "Nachricht gelöscht" : escapeHtml(m.text || "");
+      const time = formatChatTime(m.createdAt);
+
+      return `
+        <div class="message-row ${mine ? "mine" : "theirs"}">
+          <div class="message-bubble">
+            <div class="message-text">${text}</div>
+            <div class="message-time">${escapeHtml(time)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    list.scrollTop = list.scrollHeight;
+  }, (error) => {
+    console.error("Nachrichten konnten nicht geladen werden:", error);
+    const list = document.getElementById("messagesList");
+    if (list) {
+      list.innerHTML = `<div class="chat-loading">Nachrichten konnten nicht geladen werden.</div>`;
+    }
+  });
+}
+
+async function renderChats(chatDocs) {
+  if (!chatsList) return;
+
+  const myUid = auth.currentUser?.uid;
+  if (!myUid) return;
+
+  const rows = [];
+
+  for (const chatDoc of chatDocs) {
+    if (chatDoc.type !== "direct") continue;
+
+    const otherUid = (chatDoc.memberUids || []).find(uid => uid !== myUid);
+    if (!otherUid) continue;
+
+    try {
+      const otherUser = await getUserByUid(otherUid);
+      if (!otherUser || otherUser.active === false) continue;
+
+      rows.push({
+        ...chatDoc,
+        otherUser
+      });
+    } catch (error) {
+      console.error("Chatpartner konnte nicht geladen werden:", error);
+    }
+  }
+
+  rows.sort((a, b) => {
+    const at = a.lastMessageAt?.toMillis?.() || a.updatedAt?.toMillis?.() || 0;
+    const bt = b.lastMessageAt?.toMillis?.() || b.updatedAt?.toMillis?.() || 0;
+    return bt - at;
+  });
+
+  if (!rows.length) {
+    chatsList.innerHTML = `
+      <div class="empty-state compact-empty">
+        <div class="empty-icon">💬</div>
+        <h2>Noch keine Chats</h2>
+        <p>Öffne einen Kontakt und schreibe die erste Nachricht.</p>
+      </div>
+    `;
+    return;
+  }
+
+  chatsList.innerHTML = rows.map((row, index) => {
+    const username = row.otherUser.username || "NEXUS-Nutzer";
+    const lastMessage = row.lastMessage || "Noch keine Nachricht";
+    const time = formatChatListTime(row.lastMessageAt || row.updatedAt);
+
+    return `
+      <button class="chat-row" data-chat-index="${index}">
+        <span class="contact-avatar">${escapeHtml(username.charAt(0).toUpperCase())}</span>
+        <span class="chat-row-main">
+          <span class="chat-row-top">
+            <strong>${escapeHtml(username)}</strong>
+            <small>${escapeHtml(time)}</small>
+          </span>
+          <span class="chat-preview">${escapeHtml(lastMessage)}</span>
+        </span>
+      </button>
+    `;
+  }).join("");
+
+  chatsList.querySelectorAll(".chat-row").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const row = rows[Number(btn.dataset.chatIndex)];
+      if (row) openDirectChat(row.otherUser);
+    });
+  });
+}
+
+function startChatsListener() {
+  const uid = auth.currentUser?.uid;
+  if (!uid || !chatsList) return;
+
+  if (chatsUnsubscribe) chatsUnsubscribe();
+
+  const q = query(
+    collection(db, "chats"),
+    where("memberUids", "array-contains", uid)
+  );
+
+  chatsUnsubscribe = onSnapshot(q, (snap) => {
+    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderChats(docs);
+  }, (error) => {
+    console.error("Chats konnten nicht geladen werden:", error);
+    chatsList.innerHTML = `
+      <div class="empty-state compact-empty">
+        <h2>Chats konnten nicht geladen werden</h2>
+        <p>Prüfe deine Firestore-Regeln und die Internetverbindung.</p>
+      </div>
+    `;
+  });
+}
+
+// Existing contact flow now opens a real chat.
+function openDirectChatPlaceholder(user) {
+  openDirectChat(user);
+}
+
+window.addEventListener("nexus-login-ready", () => {
+  startChatsListener();
+});
+
+// Clean up live message listener when modal closes
+const originalCloseModalForChats = typeof closeModal === "function" ? closeModal : null;
+
+
 const tabs = document.querySelectorAll(".tab");
 const pages = document.querySelectorAll(".tab-page");
 
@@ -895,6 +1259,14 @@ function openModal(title, html) {
 
 function closeModal() {
   modalBackdrop.classList.add("hidden");
+
+  if (activeMessagesUnsubscribe) {
+    activeMessagesUnsubscribe();
+    activeMessagesUnsubscribe = null;
+  }
+
+  currentChatId = null;
+  currentChatPartner = null;
 }
 
 settingsBtn.addEventListener("click", () => {
@@ -908,7 +1280,7 @@ settingsBtn.addEventListener("click", () => {
   `);
 
   const installBtn = document.getElementById("installAppBtn");
-  installBtn.addEventListener("click", async () => {
+  installBtn?.addEventListener("click", async () => {
     if (deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
       await deferredInstallPrompt.userChoice;
