@@ -6,7 +6,9 @@
       "**/.*",
       "**/node_modules/**",
       "*.zip",
-      "*.txt"
+      "*.txt",
+      "functions/**",
+      ".firebaserc"
     ],
     "rewrites": [
       {
@@ -14,5 +16,8 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }
