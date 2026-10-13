@@ -10,8 +10,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #0d0d0f;
-  color: #f3f3f3;
+  background: #07111F;
+  color: #F7FAFF;
 }
 
 button {
@@ -29,8 +29,8 @@ button {
   align-items: center;
   gap: 10px;
   padding: 0 16px;
-  border-bottom: 1px solid #29292d;
-  background: #151518;
+  border-bottom: 1px solid #1B3150;
+  background: #0D1A2B;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -50,7 +50,7 @@ button {
   display: block;
   margin-top: 2px;
   font-size: 11px;
-  color: #8f8f99;
+  color: #8EA6C7;
   letter-spacing: 1px;
 }
 
@@ -66,7 +66,7 @@ button {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #232328;
+  background: #13243B;
   font-size: 21px;
 }
 
@@ -75,7 +75,7 @@ button {
   height: 44px;
   border-radius: 50%;
   background: #f1f1f1;
-  color: #111;
+  color: #08111E;
   font-weight: 700;
   font-size: 18px;
   justify-self: end;
@@ -84,8 +84,8 @@ button {
 .tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: #151518;
-  border-bottom: 1px solid #29292d;
+  background: #0D1A2B;
+  border-bottom: 1px solid #1B3150;
   position: sticky;
   top: 74px;
   z-index: 9;
@@ -96,7 +96,7 @@ button {
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: #8f8f99;
+  color: #8EA6C7;
   cursor: pointer;
   font-weight: 700;
 }
@@ -136,8 +136,8 @@ button {
   border: 0;
   border-radius: 12px;
   padding: 11px 15px;
-  background: #f3f3f3;
-  color: #101012;
+  background: #F7FAFF;
+  color: #07111F;
   font-weight: 700;
   cursor: pointer;
 }
@@ -149,12 +149,12 @@ button {
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #96969f;
+  color: #8EA6C7;
 }
 
 .empty-state h2 {
   margin: 8px 0 6px;
-  color: #eee;
+  color: #F3F7FF;
   font-size: 20px;
 }
 
@@ -185,9 +185,9 @@ button {
 
 .modal {
   width: min(440px, 100%);
-  border: 1px solid #323238;
+  border: 1px solid #21446E;
   border-radius: 18px;
-  background: #18181c;
+  background: #0E1B2D;
   box-shadow: 0 24px 70px rgba(0,0,0,.5);
   overflow: hidden;
 }
@@ -197,7 +197,7 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 17px 18px;
-  border-bottom: 1px solid #2d2d32;
+  border-bottom: 1px solid #1B3150;
 }
 
 .modal-head h2 {
@@ -209,7 +209,7 @@ button {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #242429;
+  background: #142844;
   font-size: 24px;
 }
 
@@ -236,13 +236,13 @@ button {
 
 .info-row {
   padding: 13px 14px;
-  background: #222227;
+  background: #11243B;
   border-radius: 12px;
 }
 
 .info-row small {
   display: block;
-  color: #888891;
+  color: #7F9ABE;
   margin-bottom: 5px;
 }
 
@@ -251,8 +251,8 @@ button {
   padding: 12px;
   border: 0;
   border-radius: 12px;
-  background: #f3f3f3;
-  color: #111;
+  background: #F7FAFF;
+  color: #08111E;
   font-weight: 700;
   cursor: pointer;
 }
@@ -272,3 +272,113 @@ button {
     flex-direction: column;
   }
 }
+
+
+/* NEXUS Blue Theme */
+.brand h1 {
+  color: #4D8DFF;
+  text-shadow: 0 0 18px rgba(47, 107, 255, .22);
+}
+
+.icon-btn {
+  color: #7EAEFF;
+  border: 1px solid #1E3B60;
+}
+
+.icon-btn:hover, .close-btn:hover { background: #18385E; }
+
+.profile-btn {
+  background: linear-gradient(135deg, #2F6BFF, #4D8DFF);
+  color: #FFFFFF;
+  box-shadow: 0 0 20px rgba(47, 107, 255, .25);
+}
+
+.tab.active {
+  color: #FFFFFF;
+  border-bottom-color: #2F6BFF;
+}
+
+.tab:hover { color: #C9DBFF; }
+
+.primary-btn, .share-btn {
+  background: linear-gradient(135deg, #2F6BFF, #4D8DFF);
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(47, 107, 255, .18);
+}
+
+.primary-btn:hover, .share-btn:hover { filter: brightness(1.08); }
+.empty-icon { filter: drop-shadow(0 0 10px rgba(47, 107, 255, .25)); }
+.modal { border-color: #21446E; }
+.info-row { border: 1px solid #18385E; }
+.danger-btn { background: #2A1718; border-color: #6E3030; color: #FF9C9C; }
+
+
+.install-btn {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2F6BFF, #4D8DFF);
+  color: #FFFFFF;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.install-btn:hover {
+  filter: brightness(1.08);
+}
+
+.install-hint {
+  margin: -2px 4px 6px;
+  color: #8EA6C7;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* --- NEXUS sanfter Leuchteffekt --- */
+.brand h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 4px;
+  color: #4D8DFF;
+  text-shadow:
+    0 0 6px rgba(77, 141, 255, 0.30),
+    0 0 14px rgba(47, 107, 255, 0.18);
+  animation: nexusGlow 2.8s ease-in-out infinite;
+}
+
+@keyframes nexusGlow {
+  0%, 100% {
+    color: #4D8DFF;
+    text-shadow:
+      0 0 6px rgba(77, 141, 255, 0.30),
+      0 0 14px rgba(47, 107, 255, 0.18);
+    filter: brightness(1);
+  }
+
+  50% {
+    color: #78A9FF;
+    text-shadow:
+      0 0 10px rgba(120, 169, 255, 0.62),
+      0 0 22px rgba(77, 141, 255, 0.42),
+      0 0 36px rgba(47, 107, 255, 0.24);
+    filter: brightness(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand h1 {
+    animation: none !important;
+  }
+}
+
+.firebase-status {
+  display: block;
+  margin-top: 3px;
+  font-size: 9px;
+  letter-spacing: .5px;
+  color: #7F9ABE;
+  opacity: .9;
+}
+.firebase-status[data-state="ok"] { color: #6FA8FF; }
+.firebase-status[data-state="error"] { color: #FF9C9C; }

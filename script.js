@@ -1,3 +1,77 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1zecGgLUSOnylen7-KBB6tcIxeasRKIY",
+  authDomain: "nexus-messenger-1c6b7.firebaseapp.com",
+  projectId: "nexus-messenger-1c6b7",
+  storageBucket: "nexus-messenger-1c6b7.firebasestorage.app",
+  messagingSenderId: "817244604485",
+  appId: "1:817244604485:web:8aa114c0243c11f6d63b2c",
+  measurementId: "G-3KMDJEMN9T"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+const firebaseStatus = document.getElementById("firebaseStatus");
+
+function setFirebaseStatus(text, state = "loading") {
+  if (!firebaseStatus) return;
+  firebaseStatus.textContent = text;
+  firebaseStatus.dataset.state = state;
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    setFirebaseStatus("Firebase verbunden", "ok");
+    window.NEXUS = { auth, db, uid: user.uid };
+  }
+});
+
+if (!auth.currentUser) {
+  signInAnonymously(auth).catch((error) => {
+    console.error("Firebase-Anmeldung fehlgeschlagen:", error);
+    setFirebaseStatus("Firebase-Verbindung fehlgeschlagen", "error");
+  });
+}
+
+
+
+
+// --- PWA / App-Installation ---
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => console.error("Service Worker Fehler:", error));
+  });
+}
+
+function getInstallButtonHtml() {
+  return `
+    <button class="install-btn" id="installAppBtn">
+      NEXUS als App installieren
+    </button>
+    <p class="install-hint">
+      Auf Android/Chrome erscheint dadurch die normale App-Installation.
+      Falls der Button nicht angeboten wird, kannst du im Browser-Menü
+      „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.
+    </p>
+  `;
+}
+
 const tabs = document.querySelectorAll(".tab");
 const pages = document.querySelectorAll(".tab-page");
 
@@ -33,14 +107,26 @@ function closeModal() {
 settingsBtn.addEventListener("click", () => {
   openModal("Einstellungen", `
     <div class="settings-card">
+      ${getInstallButtonHtml()}
       <button class="danger-btn" id="deleteAccountBtn">
         Konto löschen
       </button>
     </div>
   `);
 
+  const installBtn = document.getElementById("installAppBtn");
+  installBtn.addEventListener("click", async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+    } else {
+      alert("Wenn NEXUS über HTTPS geöffnet ist, kannst du im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen.");
+    }
+  });
+
   document.getElementById("deleteAccountBtn").addEventListener("click", () => {
-    alert("Das echte Löschen bauen wir später mit Supabase und einer Sicherheitsabfrage ein.");
+    alert("Das echte Löschen bauen wir später mit Firebase und einer Sicherheitsabfrage ein.");
   });
 });
 
