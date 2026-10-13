@@ -541,3 +541,125 @@ button {
   color: #FFFFFF;
   box-shadow: 0 0 18px rgba(47,107,255,.12);
 }
+
+
+/* --- NEXUS Kontakte --- */
+.section-note {
+  margin: 4px 0 0;
+  color: #7F9ABE;
+  font-size: 13px;
+}
+
+.contacts-list {
+  display: grid;
+  gap: 9px;
+}
+
+.compact-empty {
+  min-height: 42vh;
+}
+
+.contact-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 48px 1fr 22px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #18385E;
+  border-radius: 15px;
+  background: #0D1A2B;
+  color: #FFFFFF;
+  text-align: left;
+  cursor: pointer;
+}
+
+.contact-row:hover {
+  border-color: #2F6BFF;
+  background: #10213A;
+}
+
+.contact-avatar,
+.contact-profile-avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2F6BFF, #4D8DFF);
+  color: #FFFFFF;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(47,107,255,.18);
+}
+
+.contact-avatar {
+  width: 44px;
+  height: 44px;
+}
+
+.contact-profile-avatar {
+  width: 74px;
+  height: 74px;
+  margin: 2px auto 10px;
+  font-size: 28px;
+}
+
+.contact-main {
+  min-width: 0;
+}
+
+.contact-main strong,
+.contact-main small {
+  display: block;
+}
+
+.contact-main small {
+  margin-top: 3px;
+  color: #7F9ABE;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-chevron {
+  color: #6F91BD;
+  font-size: 28px;
+}
+
+.modal-note {
+  margin: 0 0 4px;
+  color: #8EA6C7;
+  line-height: 1.45;
+}
+
+.found-contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 10px;
+  padding: 12px;
+  border: 1px solid #18385E;
+  border-radius: 13px;
+  background: #0B192A;
+}
+
+.found-contact strong,
+.found-contact small {
+  display: block;
+}
+
+.found-contact small {
+  margin-top: 3px;
+  color: #7F9ABE;
+}
+
+.chat-placeholder {
+  text-align: center;
+}
+
+.chat-placeholder h3 {
+  margin: 10px 0 7px;
+}
+
+.chat-placeholder p {
+  color: #8EA6C7;
+  line-height: 1.5;
+}

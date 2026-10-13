@@ -1,4 +1,4 @@
-const CACHE_NAME = "nexus-v6";
+const CACHE_NAME = "nexus-v7";
 const APP_FILES = [
   "./",
   "./index.html",

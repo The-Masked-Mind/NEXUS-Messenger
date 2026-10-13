@@ -19,7 +19,10 @@ import {
   setDoc,
   updateDoc,
   deleteField,
-  serverTimestamp
+  serverTimestamp,
+  addDoc,
+  onSnapshot,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -214,6 +217,7 @@ function showUnlock(username = "") {
 function enterApp() {
   localStorage.setItem("nexusUnlocked", "1");
   authScreen.classList.add("hidden");
+  window.dispatchEvent(new CustomEvent("nexus-login-ready"));
 }
 
 async function getCurrentUserProfile(uid) {
@@ -501,6 +505,366 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 
+
+
+// =========================
+// NEXUS Kontakte
+// =========================
+
+const contactsList = document.getElementById("contactsList");
+const contactsEmpty = document.getElementById("contactsEmpty");
+const addContactBtn = document.getElementById("addContactBtn");
+
+let contactsUnsubscribe = null;
+let currentContacts = [];
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function getUserByUid(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? { uid: snap.id, ...snap.data() } : null;
+}
+
+async function findUserByPublicId(publicId) {
+  const normalized = publicId.trim().toUpperCase();
+  const q = query(
+    collection(db, "users"),
+    where("publicId", "==", normalized)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { uid: d.id, ...d.data() };
+}
+
+async function isAlreadyContact(contactUid) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return false;
+
+  const q = query(
+    collection(db, "contacts"),
+    where("ownerUid", "==", uid),
+    where("contactUid", "==", contactUid)
+  );
+
+  const snap = await getDocs(q);
+  return !snap.empty;
+}
+
+async function addContact(contactUser) {
+  const uid = auth.currentUser?.uid;
+
+  if (!uid) {
+    alert("Du bist nicht angemeldet.");
+    return;
+  }
+
+  if (!contactUser?.uid) {
+    alert("Kontakt konnte nicht gefunden werden.");
+    return;
+  }
+
+  if (contactUser.uid === uid) {
+    alert("Du kannst dich nicht selbst als Kontakt hinzufügen.");
+    return;
+  }
+
+  if (await isAlreadyContact(contactUser.uid)) {
+    alert(`${contactUser.username || "Dieser Nutzer"} ist bereits in deinen Kontakten.`);
+    return;
+  }
+
+  await addDoc(collection(db, "contacts"), {
+    ownerUid: uid,
+    contactUid: contactUser.uid,
+    createdAt: serverTimestamp(),
+    blocked: false
+  });
+
+  alert(`${contactUser.username || "Kontakt"} wurde hinzugefügt.`);
+}
+
+async function renderContacts(contactDocs) {
+  if (!contactsList) return;
+
+  const rows = [];
+
+  for (const contactDoc of contactDocs) {
+    try {
+      const user = await getUserByUid(contactDoc.contactUid);
+      if (user && user.active !== false) {
+        rows.push({
+          contactDocId: contactDoc.id,
+          ...contactDoc,
+          user
+        });
+      }
+    } catch (error) {
+      console.error("Kontakt konnte nicht geladen werden:", error);
+    }
+  }
+
+  currentContacts = rows;
+
+  if (!rows.length) {
+    contactsList.innerHTML = `
+      <div class="empty-state compact-empty">
+        <div class="empty-icon">👥</div>
+        <h2>Noch keine Kontakte</h2>
+        <p>Öffne einen NEXUS-Link oder füge einen Kontakt über seine NEXUS-ID hinzu.</p>
+      </div>
+    `;
+    return;
+  }
+
+  contactsList.innerHTML = rows.map((row, index) => {
+    const username = row.user.username || "Unbekannt";
+    const initial = username.charAt(0).toUpperCase();
+
+    return `
+      <button class="contact-row" data-contact-index="${index}">
+        <span class="contact-avatar">${escapeHtml(initial)}</span>
+        <span class="contact-main">
+          <strong>${escapeHtml(username)}</strong>
+          <small>${escapeHtml(row.user.publicId || "")}</small>
+        </span>
+        <span class="contact-chevron">›</span>
+      </button>
+    `;
+  }).join("");
+
+  contactsList.querySelectorAll(".contact-row").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const item = currentContacts[Number(btn.dataset.contactIndex)];
+      if (item) openContactActions(item.user);
+    });
+  });
+}
+
+function startContactsListener() {
+  const uid = auth.currentUser?.uid;
+  if (!uid || !contactsList) return;
+
+  if (contactsUnsubscribe) contactsUnsubscribe();
+
+  const q = query(
+    collection(db, "contacts"),
+    where("ownerUid", "==", uid)
+  );
+
+  contactsUnsubscribe = onSnapshot(q, (snap) => {
+    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderContacts(docs);
+  }, (error) => {
+    console.error("Kontakte konnten nicht geladen werden:", error);
+    contactsList.innerHTML = `
+      <div class="empty-state compact-empty">
+        <h2>Kontakte konnten nicht geladen werden</h2>
+        <p>Prüfe deine Firestore-Regeln und die Internetverbindung.</p>
+      </div>
+    `;
+  });
+}
+
+function openContactActions(user) {
+  const username = user.username || "NEXUS-Nutzer";
+  const publicId = user.publicId || "";
+
+  openModal(username, `
+    <div class="profile-card">
+      <div class="contact-profile-avatar">${escapeHtml(username.charAt(0).toUpperCase())}</div>
+
+      <div class="info-row">
+        <small>Benutzername</small>
+        <strong>${escapeHtml(username)}</strong>
+      </div>
+
+      <div class="info-row">
+        <small>NEXUS-ID</small>
+        <strong>${escapeHtml(publicId)}</strong>
+      </div>
+
+      <button class="share-btn" id="openChatFromContactBtn">
+        Chat öffnen
+      </button>
+    </div>
+  `);
+
+  document.getElementById("openChatFromContactBtn")?.addEventListener("click", () => {
+    closeModal();
+    openDirectChatPlaceholder(user);
+  });
+}
+
+function openDirectChatPlaceholder(user) {
+  openModal(`Chat mit ${user.username || "Kontakt"}`, `
+    <div class="chat-placeholder">
+      <div class="contact-profile-avatar">${escapeHtml((user.username || "N").charAt(0).toUpperCase())}</div>
+      <h3>${escapeHtml(user.username || "NEXUS-Nutzer")}</h3>
+      <p>Der Kontakt ist verbunden. Im nächsten Schritt bauen wir hier das echte Senden und Empfangen von Nachrichten ein.</p>
+    </div>
+  `);
+}
+
+function openAddContactDialog() {
+  openModal("Kontakt hinzufügen", `
+    <div class="profile-card">
+      <p class="modal-note">
+        Gib die persönliche NEXUS-ID des Kontakts ein, zum Beispiel <strong>NX-AB12CD34</strong>.
+      </p>
+
+      <input
+        class="auth-input"
+        id="contactPublicIdInput"
+        type="text"
+        autocomplete="off"
+        placeholder="NX-..."
+      >
+
+      <button class="share-btn" id="findContactBtn">
+        Kontakt suchen
+      </button>
+
+      <div class="auth-message" id="findContactMessage"></div>
+      <div id="foundContactArea"></div>
+    </div>
+  `);
+
+  const input = document.getElementById("contactPublicIdInput");
+  const message = document.getElementById("findContactMessage");
+  const area = document.getElementById("foundContactArea");
+
+  document.getElementById("findContactBtn")?.addEventListener("click", async () => {
+    const publicId = input.value.trim().toUpperCase();
+    setMessage(message, "");
+
+    if (!publicId) {
+      setMessage(message, "Bitte gib eine NEXUS-ID ein.", "error");
+      return;
+    }
+
+    try {
+      const user = await findUserByPublicId(publicId);
+
+      if (!user) {
+        area.innerHTML = "";
+        setMessage(message, "Kein Benutzer mit dieser NEXUS-ID gefunden.", "error");
+        return;
+      }
+
+      if (user.uid === auth.currentUser?.uid) {
+        area.innerHTML = "";
+        setMessage(message, "Das ist deine eigene NEXUS-ID.", "error");
+        return;
+      }
+
+      area.innerHTML = `
+        <div class="found-contact">
+          <span class="contact-avatar">${escapeHtml((user.username || "N").charAt(0).toUpperCase())}</span>
+          <div>
+            <strong>${escapeHtml(user.username || "NEXUS-Nutzer")}</strong>
+            <small>${escapeHtml(user.publicId || "")}</small>
+          </div>
+        </div>
+        <button class="share-btn" id="confirmAddContactBtn">
+          Kontakt hinzufügen
+        </button>
+      `;
+
+      document.getElementById("confirmAddContactBtn")?.addEventListener("click", async () => {
+        try {
+          await addContact(user);
+          closeModal();
+        } catch (error) {
+          console.error(error);
+          setMessage(message, "Kontakt konnte nicht hinzugefügt werden.", "error");
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      setMessage(message, "Kontakt konnte nicht gesucht werden.", "error");
+    }
+  });
+
+  setTimeout(() => input?.focus(), 100);
+}
+
+addContactBtn?.addEventListener("click", openAddContactDialog);
+
+async function openSharedUser(publicId) {
+  if (!publicId || !auth.currentUser) return;
+
+  try {
+    const user = await findUserByPublicId(publicId);
+
+    if (!user || user.uid === auth.currentUser.uid) return;
+
+    const already = await isAlreadyContact(user.uid);
+
+    openModal(user.username || "NEXUS-Nutzer", `
+      <div class="profile-card">
+        <div class="contact-profile-avatar">${escapeHtml((user.username || "N").charAt(0).toUpperCase())}</div>
+
+        <div class="info-row">
+          <small>Benutzername</small>
+          <strong>${escapeHtml(user.username || "NEXUS-Nutzer")}</strong>
+        </div>
+
+        <div class="info-row">
+          <small>NEXUS-ID</small>
+          <strong>${escapeHtml(user.publicId || "")}</strong>
+        </div>
+
+        ${already
+          ? `<button class="share-btn" id="sharedOpenChatBtn">Chat öffnen</button>`
+          : `<button class="share-btn" id="sharedAddContactBtn">Kontakt hinzufügen</button>`
+        }
+      </div>
+    `);
+
+    document.getElementById("sharedAddContactBtn")?.addEventListener("click", async () => {
+      await addContact(user);
+      closeModal();
+      openDirectChatPlaceholder(user);
+    });
+
+    document.getElementById("sharedOpenChatBtn")?.addEventListener("click", () => {
+      closeModal();
+      openDirectChatPlaceholder(user);
+    });
+  } catch (error) {
+    console.error("Geteilter Kontakt konnte nicht geöffnet werden:", error);
+  }
+}
+
+function getSharedPublicIdFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const queryId = params.get("user") || params.get("chat");
+  if (queryId) return queryId.toUpperCase();
+
+  const match = location.pathname.match(/\/chat\/([^/?#]+)/i);
+  return match ? decodeURIComponent(match[1]).toUpperCase() : null;
+}
+
+async function afterNexusLoginContacts() {
+  startContactsListener();
+
+  const sharedPublicId = getSharedPublicIdFromUrl();
+  if (sharedPublicId) {
+    setTimeout(() => openSharedUser(sharedPublicId), 250);
+  }
+}
+
+window.addEventListener("nexus-login-ready", afterNexusLoginContacts);
+
+
 const tabs = document.querySelectorAll(".tab");
 const pages = document.querySelectorAll(".tab-page");
 
@@ -569,7 +933,7 @@ profileBtn.addEventListener("click", () => {
 
       <div class="info-row">
         <small>Persönlicher Chat-Link</small>
-        <strong>nexus.app/chat/${localStorage.getItem("nexusPublicId") || "..."}</strong>
+        <strong>${window.location.host || "NEXUS"}/?user=${localStorage.getItem("nexusPublicId") || "..."}</strong>
       </div>
 
       <button class="share-btn" id="shareProfileBtn">
@@ -580,7 +944,7 @@ profileBtn.addEventListener("click", () => {
 
   document.getElementById("shareProfileBtn").addEventListener("click", async () => {
     const publicId = localStorage.getItem("nexusPublicId") || "";
-    const url = `https://nexus.app/chat/${publicId}`;
+    const url = `${window.location.origin}${window.location.pathname}?user=${encodeURIComponent(publicId)}`;
 
     if (navigator.share) {
       try {

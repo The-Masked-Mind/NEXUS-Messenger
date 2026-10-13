@@ -106,13 +106,19 @@
 
       <section class="tab-page" id="contacts">
         <div class="section-header">
-          <h2>Kontakte</h2>
+          <div>
+            <h2>Kontakte</h2>
+            <p class="section-note">Deine gespeicherten NEXUS-Kontakte.</p>
+          </div>
+          <button class="primary-btn" id="addContactBtn">+ Kontakt</button>
         </div>
 
-        <div class="empty-state">
-          <div class="empty-icon">👥</div>
-          <h2>Noch keine Kontakte</h2>
-          <p>Kontakte kannst du später aus einem Chat oder Profil hinzufügen.</p>
+        <div class="contacts-list" id="contactsList">
+          <div class="empty-state compact-empty" id="contactsEmpty">
+            <div class="empty-icon">👥</div>
+            <h2>Noch keine Kontakte</h2>
+            <p>Öffne einen NEXUS-Link oder füge einen Kontakt über seine NEXUS-ID hinzu.</p>
+          </div>
         </div>
       </section>
 
